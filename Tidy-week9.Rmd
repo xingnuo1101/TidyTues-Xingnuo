@@ -1,0 +1,74 @@
+---
+title: "TidyTuesday"
+author: "Xingnuo Zhang"
+date: "3/19/2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+#install.packages("tidytuesdayR")
+library("tidytuesdayR")
+tuesdata <- tidytuesdayR::tt_load('2021-02-23')
+tuesdata <- tidytuesdayR::tt_load(2021, week = 9)
+employed <- tuesdata$employed
+earn     <- tuesdata$earn
+```
+
+```{r package}
+library(dplyr)
+library(ggplot2)
+#install.packages("showtext")
+library(showtext)
+library(tidyverse)
+```
+
+```{r weeking earning}
+my_data <- earn %>% 
+  filter(sex == "Both Sexes" & race != "All Races" & age == "16 years and over") %>% 
+  mutate(time = year + (quarter-1)/4)
+ggplot(data = my_data) +
+  geom_line(aes(x = time, y = median_weekly_earn, col = race)) +
+  scale_fill_discrete(name = "Race") +
+  labs(x = "Time", y = "Median Weekly Earnings in USD") +
+  theme_classic() +
+  theme(legend.position = "right")
+```
+
+```{r sex}
+sex_inequality <- earn %>% 
+  filter(sex != "Both Sexes" & race != "All Races" & age == "16 years and over") %>% 
+  mutate(time = year + quarter/4) %>% 
+  group_by(sex, time) %>% 
+  summarise(ratio = min(median_weekly_earn)/max(median_weekly_earn))
+
+sex_inequality %>% 
+  group_by(sex) %>% 
+  slice(n()) %>% 
+  ungroup %>%
+  mutate(time = time + 0.5,
+         sex_symbol = c("\u2642", "\u2640")) -> sex_symbol
+
+ggplot() +
+  geom_line(data = sex_inequality, aes(x = time, y = ratio, colour = sex), size = 0.5) +
+  labs(x = "Time", y = "Ratio between the Highest and Lowest Earning") +
+  geom_hline(aes(yintercept = 1), lty = 3) +
+  geom_text(aes(x = mean(sex_inequality$time), y = 0.95, label = "Income Party"), size = 5) +
+  geom_text(data = sex_symbol, aes(x = time, y = ratio, label = sex_symbol), size = 10) +
+  scale_colour_manual(name = "Sex", values = c("grey", "blue")) +
+  scale_x_continuous(breaks = seq(2010, 2021, 1)) +
+  scale_y_continuous(limits = c(NA, 1)) +
+  theme_classic()
+```
+
+
+
+
+
+
+
+
+

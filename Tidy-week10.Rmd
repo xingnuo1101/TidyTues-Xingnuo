@@ -1,0 +1,69 @@
+---
+title: "Tidy-week10"
+author: "Xingnuo Zhang"
+date: "3/31/2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r data}
+#install.packages("tidytuesdayR")
+library("tidytuesdayR")
+tuesdata <- tidytuesdayR::tt_load('2021-03-02')
+tuesdata <- tidytuesdayR::tt_load(2021, week = 10)
+youtube <- tuesdata$youtube
+```
+
+```{r package}
+library(ggplot2)
+library(dplyr)
+library(here)
+library(tidyverse)
+#install.packages("ggtext")
+library(ggtext)
+#install.packages("patchwork")
+library(patchwork)
+#install.packages("extrafont")
+library(extrafont)
+library(lme4)
+library(knitr)
+library(scales)
+```
+
+```{r plot1}
+youtube %>%
+  arrange(view_count) %>%
+  slice(1:(nrow(.)-1)) %>% 
+  ggplot(aes(x = brand, y = view_count))+
+  geom_jitter(width = 0.25, size = 0.9) +
+  scale_y_continuous(limits = c(0, 3e7), breaks = seq(0, 3e7, 1e7))+
+  theme_minimal()+
+  labs(title = "Superbowl Commercials View Count of Different Brands",
+       x = "Brand",
+       y = "Number of Views in millions",
+       caption = str_c("Created by: Xingnuo Zhang, U of T\n",
+       "Data source: FiveThirtyEight"))
+```
+
+
+```{r plot2}
+data <- youtube %>%
+  select(brand, like_count, dislike_count, year)
+new_data <- data.frame("brand" = c("Coca-Cola","Doritos","Pepsi","Toyota",
+                                   "Hynudai","Kia", "Bud Light"),
+           "like_count" = c(1470, 10717, 146, 115, 342, 78, 485))
+pie <- ggplot(data = new_data, aes(x = "", y = like_count, fill = brand))+
+  geom_bar(width = 1, stat = "identity")+
+  coord_polar("y", start = 0)
+
+pie + scale_fill_brewer(palette="Blues", name = "Brand")+  
+  theme(axis.text.x=element_blank())+
+  ggtitle("Superbowl Commercials' Like Count of Different brands in 2020")
+```
+
+
+
+

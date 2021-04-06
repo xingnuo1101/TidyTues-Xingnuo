@@ -1,0 +1,63 @@
+---
+title: "Tidy-week13"
+author: "Xingnuo Zhang"
+date: "3/25/2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r data, include=FALSE}
+#install.packages("tidytuesdayR")
+library("tidytuesdayR")
+tuesdata <- tidytuesdayR::tt_load('2021-03-23')
+tuesdata <- tidytuesdayR::tt_load(2021, week = 13)
+unvotes <- tuesdata$unvotes
+roll_calls <- tuesdata$roll_calls
+```
+
+```{r package, include=FALSE}
+#install.packages("dplyr")
+library(dplyr)
+library(tidyverse)
+library(ggplot2)
+library(extrafont)
+```
+
+```{r votes}
+rollcall_votes <- unvotes %>%
+  left_join(roll_calls, by = 'rcid') %>%
+  mutate(year = lubridate::year(date))
+
+color <- RColorBrewer::brewer.pal(3, 'Dark2')
+
+rollcall_votes %>%
+  group_by(year) %>%
+  mutate(n_year = n()) %>%
+  group_by(year, vote) %>%
+  summarise(prop_vote = n()/n_year,
+            sd = sqrt((prop_vote * (1 - prop_vote)) / n_year),
+            ul = prop_vote + (1.96 * sd),
+            ll = prop_vote - (1.96 * sd)) %>% 
+  mutate(y_t = ifelse(year == 2019, prop_vote, NA)) %>%
+  ggplot(aes(x = year, y = prop_vote, col = vote)) +
+  geom_line(size = 1) +
+  geom_text(aes(y = y_t, label = paste0("  ", str_to_upper(vote))),
+    fontface = "bold",
+    hjust = 0,
+    size = 3) +
+  scale_y_continuous(labels = scales::percent) +
+  scale_x_continuous(guide = guide_axis(check.overlap = T),
+    n.breaks = 20,
+    limits = c(1945, 2020)) +
+  scale_color_manual(values = color, aesthetics = "color") +
+  theme_minimal() +
+  labs(y = "Proportion of UN Votes",
+    x = "Year",
+    title = "Trend of UN Votes during 1946-2019",
+    caption = str_c("Created by: Xingnuo Zhang, U of T\n",
+       "Data source: Harvard's Dataverse"))
+```
+

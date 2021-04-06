@@ -1,0 +1,61 @@
+---
+title: "Tidy-week12"
+author: "Xingnuo Zhang"
+date: "3/20/2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r data}
+#install.packages("tidytuesdayR")
+library("tidytuesdayR")
+tuesdata <- tidytuesdayR::tt_load('2021-03-16')
+tuesdata <- tidytuesdayR::tt_load(2021, week = 12)
+games <- tuesdata$games
+```
+
+```{r package}
+#install.packages("dplyr")
+library(dplyr)
+library(tidyverse)
+library(ggplot2)
+library(extrafont)
+```
+
+```{r}
+games %>%
+  left_join(data.frame(month = month.name, month_id = 1:12), by = "month") %>%
+  mutate(ap_perc = as.numeric(str_remove(avg_peak_perc, '%')),
+    month_order = factor(month_id, ordered = TRUE, levels = 1:12, labels = month.name)) %>%
+  group_by(year, month_order) %>%
+  summarise(avg_peak_per = mean(ap_perc, na.rm = TRUE),
+            sd = sd(ap_perc, na.rm = TRUE)) %>%
+  arrange(year, month_order) %>%
+  group_by(month_order) %>%
+  mutate(y_txt = ifelse(row_number() == n(), avg_peak_per, NA),
+         x_txt = ifelse(row_number() == n(), year, NA)) %>%
+  ggplot(aes(x = year, y = avg_peak_per)) +
+  geom_line(aes(group = month_order, col = month_order), size = 1) +
+  geom_text(aes(x_txt, label = paste0("  ", month_order), col = month_order),
+    size = 3,
+    hjust = 0,
+    fontface = "bold")+
+  scale_y_continuous(labels = scales::percent_format(scale = 1, accuracy = 1)) +
+  scale_color_brewer(palette = "Paired") +
+  theme_minimal() +
+  labs(x = "Year",
+    y = "Average Number of players",
+    title = "Video Game",
+    caption = str_c("Created by: Xingnuo Zhang, U of T\n",
+                    "Data Source: StreamCharts"))
+```
+
+
+
+
+
+
+
